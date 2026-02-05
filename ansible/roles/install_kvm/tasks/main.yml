@@ -1,0 +1,50 @@
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install QEMU/KVM and virtualization packages
+  apt:
+    name:
+      - qemu-kvm
+      - libvirt-daemon-system
+      - libvirt-clients
+      - bridge-utils
+      - virtinst
+      - virt-manager
+      - cpu-checker
+      - libguestfs-tools
+      - libosinfo-bin
+    state: present
+
+- name: Ensure libvirtd service is running and enabled
+  systemd:
+    name: libvirtd
+    state: started
+    enabled: yes
+
+- name: Add user to libvirt and kvm groups
+  user:
+    name: "{{ ansible_user }}"
+    groups: libvirt,kvm
+    append: yes
+  when: ansible_user is defined
+
+- name: Check if hardware virtualization is enabled
+  command: kvm-ok
+  register: kvm_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Display KVM check results
+  debug:
+    var: kvm_check.stdout_lines
+
+- name: Start default network
+  shell: virsh net-start default
+  ignore_errors: true
+
+- name: Autostart default network
+  shell: virsh net-autostart default
+  ignore_errors: true

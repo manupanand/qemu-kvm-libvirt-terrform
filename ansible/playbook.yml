@@ -1,0 +1,6 @@
+
+- name: Configuring the VM
+  hosts: all
+  become: true
+  roles:
+    - "{{ role_name }}"
